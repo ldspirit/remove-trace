@@ -1,0 +1,60 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model Friend {
+  id           Int       @id @default(autoincrement())
+  name         String
+  profileUrl   String    @map("profile_url")
+  status       String    @default("not_started")
+  priority     Int       @default(2)
+  notes        String    @default("")
+  unfriendedAt DateTime? @map("unfriended_at")
+  blockedAt    DateTime? @map("blocked_at")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+
+  activityItems   ActivityItem[]
+  cleanupSessions CleanupSession[]
+
+  @@map("friends")
+}
+
+model ActivityItem {
+  id              Int       @id @default(autoincrement())
+  friendId        Int       @map("friend_id")
+  type            String
+  contentPreview  String    @default("") @map("content_preview")
+  facebookUrl     String    @default("") @map("facebook_url")
+  interactionDate DateTime? @map("interaction_date")
+  status          String    @default("pending")
+  discoveredVia   String    @default("manual") @map("discovered_via")
+  batchId         String?   @map("batch_id")
+  notes           String    @default("")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  friend Friend @relation(fields: [friendId], references: [id], onDelete: Cascade)
+
+  @@map("activity_items")
+}
+
+model CleanupSession {
+  id             Int       @id @default(autoincrement())
+  friendId       Int       @map("friend_id")
+  startedAt      DateTime  @default(now()) @map("started_at")
+  completedAt    DateTime? @map("completed_at")
+  itemsTotal     Int       @default(0) @map("items_total")
+  itemsCompleted Int       @default(0) @map("items_completed")
+  itemsSkipped   Int       @default(0) @map("items_skipped")
+  itemsRemaining Int       @default(0) @map("items_remaining")
+
+  friend Friend @relation(fields: [friendId], references: [id], onDelete: Cascade)
+
+  @@map("cleanup_sessions")
+}
